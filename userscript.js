@@ -19,20 +19,20 @@
 
 (function (document) {
 	var debug = false;
-	var addPricesDebounced = debounce(addPrices, 250);
+	var addPricesDebounced = debounce(addPricesToProperties, 250);
 
 	// https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-	var target = document.querySelector('#page-layout');
-	addPricesDebounced(target);
+	var $layout = document.querySelector('#page-layout');
+	addPricesDebounced($layout);
 
 	// create an observer instance
 	var observer = new MutationObserver(function (mutations) {
-		addPricesDebounced(target);
+		addPricesDebounced($layout);
 	});
 
 
 	// pass in the target node, as well as the observer options
-	observer.observe(target, {
+	observer.observe($layout, {
 		// characterData: true,
 		// attributes: true, 
 		childList: true,
@@ -42,26 +42,32 @@
 	// later, you can stop observing
 	// observer.disconnect();
 
-	function addPrices(target) {
-		var propertyList = target.querySelector('.dir-property-list');
 
-		debug && console.log('adding prices ...', target, propertyList);
+
+	function addPricesToProperty($property) {
+
+	}
+
+	function addPricesToProperties($layout) {
+		var propertyList = $layout.querySelector('.dir-property-list');
+
+		debug && console.log('adding prices ...', $layout, propertyList);
 		if (propertyList && window.location.pathname.match(/\/hledani\/?/)) {
 
 			var properties = propertyList.querySelectorAll('.property');
 
-			Array.prototype.forEach.call(properties, function (property, i) {
-				debug && console.log('Computing price for ' + i, property);
+			Array.prototype.forEach.call(properties, function ($property, i) {
+				debug && console.log('Computing price for ' + i, $property);
 
-				var price = property.querySelector('.price');
+				var $price = $property.querySelector('.price');
 
-				var pricePerM = price.querySelector('.price-per-meter');
-				var altPrice = price.querySelector('.alt-price');
-				if (pricePerM || altPrice) {
+				var $pricePerM = $price.querySelector('.price-per-meter');
+				var $altPrice = $price.querySelector('.alt-price');
+				if ($pricePerM || $altPrice) {
 					return;
 				}
 
-				var nameValueRaw = property.querySelector('h2 .name').textContent;
+				var nameValueRaw = $property.querySelector('h2 .name').textContent;
 				var nameValueNoNbsp = nameValueRaw.trim().replace(/&nbsp;/g, ' ');
 				var nameMatches = nameValueNoNbsp.match(/(\s(\d+)\s)?(\d+)\sm²/);
 				if (!nameMatches) {
@@ -71,8 +77,8 @@
 				var areaMeters = parseInt(nameMatches[3], 10);
 				if (!isNaN(areaThousands)) { areaMeters += 1000 * areaThousands; }
 
-				var normPrice = price.querySelector('.norm-price');
-				var normPriceValueRaw = normPrice.textContent;
+				var $normPrice = $price.querySelector('.norm-price');
+				var normPriceValueRaw = $normPrice.textContent;
 				var normPriceValue = parseInt(normPriceValueRaw.trim().replace(/(&nbsp;|\s)+/g, ''), 10);
 
 				if (areaMeters === 0 || isNaN(normPriceValue)) { return; }
@@ -82,14 +88,14 @@
 				debug && console.log('Price is ', pricePerMeterValueStr);
 
 				// add element
-				pricePerM = document.createElement('span');
-				pricePerM.classList.add('alt-price');
-				pricePerM.classList.add('price-per-meter');
+				$pricePerM = document.createElement('span');
+				$pricePerM.classList.add('alt-price');
+				$pricePerM.classList.add('price-per-meter');
 				// pricePerM.style.margin = '0 0 0 1em';
-				pricePerM.style.fontStyle = 'italic';
-				var t = document.createTextNode(pricePerMeterValueStr);
-				pricePerM.appendChild(t);
-				price.appendChild(pricePerM);
+				$pricePerM.style.fontStyle = 'italic';
+				var $text = document.createTextNode(pricePerMeterValueStr);
+				$pricePerM.appendChild($text);
+				$price.appendChild($pricePerM);
 			});
 
 		}
