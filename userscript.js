@@ -2,7 +2,7 @@
 // @name Sreality - cena za metr
 // @description Přidá k výpisům na srealitách cenu za metr
 // @author tkafka
-// @version 0.0.15
+// @version 0.0.18
 // @date 2016-05-19
 // @namespace cenazametr.sreality.seznam.tomaskafka.com
 // @include http://www.sreality.cz/*
@@ -53,7 +53,7 @@ Detail:
 
 	function addPrices($layout) {
 		if (window.location.pathname.match(/\/(hledani|detail)\/?/)) {
-			var $properties = propertyList.querySelectorAll('.property');
+			var $properties = document.querySelectorAll('.property, .property-detail');
 			if ($properties.length > 0) {
 				Array.prototype.forEach.call($properties, function ($property, i) {
 					addPricesToProperty($property);
@@ -70,10 +70,11 @@ Detail:
 		var $pricePerM = $price.querySelector('.price-per-meter');
 		var $altPrice = $price.querySelector('.alt-price');
 		if ($pricePerM || $altPrice) {
+			// already there
 			return;
 		}
 
-		var nameValueRaw = $property.querySelector('h2 .name').textContent;
+		var nameValueRaw = $property.querySelector('h2 .name, h1 .name').textContent;
 		var nameValueNoNbsp = nameValueRaw.trim().replace(/&nbsp;/g, ' ');
 		var nameMatches = nameValueNoNbsp.match(/(\s(\d+)\s)?(\d+)\sm²/);
 		if (!nameMatches) {
