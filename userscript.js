@@ -17,9 +17,18 @@
 // ==/UserScript==
 
 
+/*
+List:
+.dir-property-list
+	.property
+
+Detail:
+.property-detail
+*/
+
 (function (document) {
 	var debug = false;
-	var addPricesDebounced = debounce(addPricesToProperties, 250);
+	var addPricesDebounced = debounce(addPrices, 250);
 
 	// https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
 	var $layout = document.querySelector('#page-layout');
@@ -42,65 +51,58 @@
 	// later, you can stop observing
 	// observer.disconnect();
 
-
-
-	function addPricesToProperty($property) {
-
-	}
-
-	function addPricesToProperties($layout) {
-		var propertyList = $layout.querySelector('.dir-property-list');
-
-		debug && console.log('adding prices ...', $layout, propertyList);
-		if (propertyList && window.location.pathname.match(/\/hledani\/?/)) {
-
-			var properties = propertyList.querySelectorAll('.property');
-
-			Array.prototype.forEach.call(properties, function ($property, i) {
-				debug && console.log('Computing price for ' + i, $property);
-
-				var $price = $property.querySelector('.price');
-
-				var $pricePerM = $price.querySelector('.price-per-meter');
-				var $altPrice = $price.querySelector('.alt-price');
-				if ($pricePerM || $altPrice) {
-					return;
-				}
-
-				var nameValueRaw = $property.querySelector('h2 .name').textContent;
-				var nameValueNoNbsp = nameValueRaw.trim().replace(/&nbsp;/g, ' ');
-				var nameMatches = nameValueNoNbsp.match(/(\s(\d+)\s)?(\d+)\sm²/);
-				if (!nameMatches) {
-					return;
-				}
-				var areaThousands = parseInt(nameMatches[2], 10);
-				var areaMeters = parseInt(nameMatches[3], 10);
-				if (!isNaN(areaThousands)) { areaMeters += 1000 * areaThousands; }
-
-				var $normPrice = $price.querySelector('.norm-price');
-				var normPriceValueRaw = $normPrice.textContent;
-				var normPriceValue = parseInt(normPriceValueRaw.trim().replace(/(&nbsp;|\s)+/g, ''), 10);
-
-				if (areaMeters === 0 || isNaN(normPriceValue)) { return; }
-				var pricePerMeterValue = normPriceValue / areaMeters;
-				var pricePerMeterValueStr = ' · ' + formatThousands(roundToMax3ValidNumbers(pricePerMeterValue)) + ' Kč za m²';
-
-				debug && console.log('Price is ', pricePerMeterValueStr);
-
-				// add element
-				$pricePerM = document.createElement('span');
-				$pricePerM.classList.add('alt-price');
-				$pricePerM.classList.add('price-per-meter');
-				// pricePerM.style.margin = '0 0 0 1em';
-				$pricePerM.style.fontStyle = 'italic';
-				var $text = document.createTextNode(pricePerMeterValueStr);
-				$pricePerM.appendChild($text);
-				$price.appendChild($pricePerM);
-			});
-
+	function addPrices($layout) {
+		if (window.location.pathname.match(/\/(hledani|detail)\/?/)) {
+			var $properties = propertyList.querySelectorAll('.property');
+			if ($properties.length > 0) {
+				Array.prototype.forEach.call($properties, function ($property, i) {
+					addPricesToProperty($property);
+				});
+			}
 		}
 	}
 
+	function addPricesToProperty($property) {
+		debug && console.log('Computing price for ' + i, $property);
+
+		var $price = $property.querySelector('.price');
+
+		var $pricePerM = $price.querySelector('.price-per-meter');
+		var $altPrice = $price.querySelector('.alt-price');
+		if ($pricePerM || $altPrice) {
+			return;
+		}
+
+		var nameValueRaw = $property.querySelector('h2 .name').textContent;
+		var nameValueNoNbsp = nameValueRaw.trim().replace(/&nbsp;/g, ' ');
+		var nameMatches = nameValueNoNbsp.match(/(\s(\d+)\s)?(\d+)\sm²/);
+		if (!nameMatches) {
+			return;
+		}
+		var areaThousands = parseInt(nameMatches[2], 10);
+		var areaMeters = parseInt(nameMatches[3], 10);
+		if (!isNaN(areaThousands)) { areaMeters += 1000 * areaThousands; }
+
+		var $normPrice = $price.querySelector('.norm-price');
+		var normPriceValueRaw = $normPrice.textContent;
+		var normPriceValue = parseInt(normPriceValueRaw.trim().replace(/(&nbsp;|\s)+/g, ''), 10);
+
+		if (areaMeters === 0 || isNaN(normPriceValue)) { return; }
+		var pricePerMeterValue = normPriceValue / areaMeters;
+		var pricePerMeterValueStr = ' · ' + formatThousands(roundToMax3ValidNumbers(pricePerMeterValue)) + ' Kč za m²';
+
+		debug && console.log('Price is ', pricePerMeterValueStr);
+
+		// add element
+		$pricePerM = document.createElement('span');
+		$pricePerM.classList.add('alt-price');
+		$pricePerM.classList.add('price-per-meter');
+		// pricePerM.style.margin = '0 0 0 1em';
+		$pricePerM.style.fontStyle = 'italic';
+		var $text = document.createTextNode(pricePerMeterValueStr);
+		$pricePerM.appendChild($text);
+		$price.appendChild($pricePerM);	
+	}
 
 	// https://davidwalsh.name/javascript-debounce-function
 	function debounce(func, wait, immediate) {
